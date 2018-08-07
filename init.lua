@@ -10,9 +10,17 @@ else
 	hook_tmp_time=hook_tmp_time-10
 end
 
+
+slingshot_def=function(pos,n)
+	if not (pos and pos.x and pos.y and pos.z and n) then return false end
+	local nn=minetest.get_node(pos).name
+	return (minetest.registered_nodes[nn] and minetest.registered_nodes[nn][n])
+end
+
+
 local function slingshot_onuse(itemstack, user)
 	local veloc=15
-	local pos = user:getpos()
+	local pos = user:get_pos()
 	local upos={x=pos.x,y=pos.y+2,z=pos.z}
 	local dir = user:get_look_dir()
 	local item=itemstack:to_table()
@@ -79,8 +87,8 @@ minetest.register_globalstep(function(dtime)
 	hook_tmp_throw_timer=0
 	for i, t in pairs(hook_tmp_throw) do
 		t.timer=t.timer-0.25
-		if t.timer<=0 or t.ob==nil or t.ob:getpos()==nil then table.remove(hook_tmp_throw,i) return end
-		for ii, ob in pairs(minetest.get_objects_inside_radius(t.ob:getpos(), 1.5)) do
+		if t.timer<=0 or t.ob==nil or t.ob:get_pos()==nil then table.remove(hook_tmp_throw,i) return end
+		for ii, ob in pairs(minetest.get_objects_inside_radius(t.ob:get_pos(), 1.5)) do
 			if (not ob:get_luaentity()) or (ob:get_luaentity() and (ob:get_luaentity().name~="__builtin:item")) then
 				if (not ob:is_player()) or (ob:is_player() and ob:get_player_name(ob)~=t.user and minetest.setting_getbool("enable_pvp")==true) then
 					ob:set_hp(ob:get_hp()-5)
@@ -90,7 +98,7 @@ minetest.register_globalstep(function(dtime)
 					t.ob:setacceleration({x=0, y=-10,z=0})
 					t.ob:setvelocity({x=0, y=-10, z=0})
 					table.remove(hook_tmp_throw,i)
-					minetest.sound_play("hook_hard_punch", {pos=ob:getpos(), gain = 1.0, max_hear_distance = 5,})
+					minetest.sound_play("hook_hard_punch", {pos=ob:get_pos(), gain = 1.0, max_hear_distance = 5,})
 					break
 				end
 			end
@@ -121,11 +129,12 @@ minetest.register_tool("hook:hook", {
 		local pos=pointed_thing.above
 		local pos2=pointed_thing.under
 		local name=user:get_player_name()
-		if minetest.registered_nodes[minetest.get_node(pos2).name].walkable and
-		minetest.registered_nodes[minetest.get_node({x=pos.x,y=pos.y-1,z=pos.z}).name].walkable==false and
-		(minetest.registered_nodes[minetest.get_node({x=pos2.x,y=pos2.y+1,z=pos2.z}).name].walkable==false or minetest.get_node({x=pos2.x,y=pos2.y+1,z=pos2.z}).name=="default:snow") and
+
+		if slingshot_def(pos2,"walkable") and
+		slingshot_def({x=pos.x,y=pos.y-1,z=pos.z},"walkable")==false
+		and (slingshot_def({x=pos2.x,y=pos2.y+1,z=pos2.z},"walkable")==false or minetest.get_node({x=pos2.x,y=pos2.y+1,z=pos2.z}).name=="default:snow") and
 		is_hook(pos,name) and
-		minetest.registered_nodes[minetest.get_node({x=pos.x,y=pos.y+1,z=pos.z}).name].walkable==false then
+		slingshot_def({x=pos.x,y=pos.y+1,z=pos.z},"walkable")==false then
 			if d==3 then d=1
 			elseif d==1 then d=3
 			elseif d==2 then d=0
@@ -151,11 +160,11 @@ minetest.register_tool("hook:hook_upgrade", {
 		local pos=pointed_thing.above
 		local pos2=pointed_thing.under
 		local name=user:get_player_name()
-		if minetest.registered_nodes[minetest.get_node(pos2).name].walkable and
-		minetest.registered_nodes[minetest.get_node({x=pos.x,y=pos.y-1,z=pos.z}).name].walkable==false and
-		(minetest.registered_nodes[minetest.get_node({x=pos2.x,y=pos2.y+1,z=pos2.z}).name].walkable==false or minetest.get_node({x=pos2.x,y=pos2.y+1,z=pos2.z}).name=="default:snow") and
+		if slingshot_def(pos2,"walkable") and
+		slingshot_def({x=pos.x,y=pos.y-1,z=pos.z},"walkable")==false and
+		(slingshot_def({x=pos2.x,y=pos2.y+1,z=pos2.z},"walkable")==false or minetest.get_node({x=pos2.x,y=pos2.y+1,z=pos2.z}).name=="default:snow") and
 		is_hook(pos,name) and
-		minetest.registered_nodes[minetest.get_node({x=pos.x,y=pos.y+1,z=pos.z}).name].walkable==false then
+		slingshot_def({x=pos.x,y=pos.y+1,z=pos.z},"walkable")==false then
 			if d==3 then d=1
 			elseif d==1 then d=3
 			elseif d==2 then d=0
@@ -183,7 +192,7 @@ minetest.register_tool("hook:climb_rope", {
 		if pointed_thing.type~="node" then
 			hook.user=user
 			hook.locked=false
-			local pos=user:getpos()
+			local pos=user:get_pos()
 			local d=user:get_look_dir()
 			local m=minetest.add_entity({x=pos.x,y=pos.y+1.5,z=pos.z}, "hook:power")
 			m:setvelocity({x=d.x*15, y=d.y*15, z=d.z*15})
@@ -195,7 +204,7 @@ minetest.register_tool("hook:climb_rope", {
 			local z=0
 			local x=0
 			local name=user:get_player_name()
-			if minetest.registered_nodes[minetest.get_node(pos).name].walkable then
+			if slingshot_def(pos,"walkable") then
 				if d==0 then z=1 end
 				if d==2 then z=-1 end
 				if d==1 then x=1 end
@@ -223,7 +232,7 @@ minetest.register_tool("hook:climb_rope_locked", {
 		if pointed_thing.type~="node" then
 			hook.user=user
 			hook.locked=true
-			local pos=user:getpos()
+			local pos=user:get_pos()
 			local d=user:get_look_dir()
 			local m=minetest.add_entity({x=pos.x,y=pos.y+1.5,z=pos.z}, "hook:power")
 			m:setvelocity({x=d.x*15, y=d.y*15, z=d.z*15})
@@ -235,7 +244,7 @@ minetest.register_tool("hook:climb_rope_locked", {
 			local z=0
 			local x=0
 			local name=user:get_player_name()
-			if minetest.registered_nodes[minetest.get_node(pos).name].walkable then
+			if slingshot_def(pos,"walkable") then
 				if d==0 then z=1 end
 				if d==2 then z=-1 end
 				if d==1 then x=1 end
@@ -410,9 +419,9 @@ minetest.register_tool("hook:mba", {
 	range = 1,
 	inventory_image = "hook_mba.png",
 on_use=function(itemstack, user, pointed_thing)
-	local pos=user:getpos()
+	local pos=user:get_pos()
 	pos.y=pos.y+1.5
-	if minetest.registered_nodes[minetest.get_node(pos).name].drowning==0 then
+	if slingshot_def(pos,"drowning")==0 then
 		itemstack:set_wear(1)
 	else
 		local use=itemstack:get_wear()+(65536/10)
@@ -451,9 +460,6 @@ minetest.register_craft({
 	}
 })
 
-
-
-
 minetest.register_craft({
 	output = "hook:climb_rope",
 	recipe = {
@@ -477,4 +483,3 @@ minetest.register_craft({
 		{"","default:steel_ingot",""},
 	}
 })
-

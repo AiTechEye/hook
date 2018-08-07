@@ -33,14 +33,14 @@ on_activate=function(self, staticdata)
 	end,
 on_step= function(self, dtime)
 	self.timer2=self.timer2+dtime
-	local pos=self.object:getpos()
+	local pos=self.object:get_pos()
 	local kill=0
-	if minetest.registered_nodes[minetest.get_node({x=pos.x+self.d.x,y=pos.y,z=pos.z+self.d.z}).name].walkable and minetest.registered_nodes[minetest.get_node({x=pos.x+self.d.x,y=pos.y+1,z=pos.z+self.d.z}).name].walkable==false and is_hook(pos,self.uname) and is_hook({x=pos.x,y=pos.y+1,z=pos.z},self.uname) then
+	if slingshot_def({x=pos.x+self.d.x,y=pos.y,z=pos.z+self.d.z},"walkable") and slingshot_def({x=pos.x+self.d.x,y=pos.y+1,z=pos.z+self.d.z},"walkable")==false
+	and is_hook(pos,self.uname) and is_hook({x=pos.x,y=pos.y+1,z=pos.z},self.uname) then
 		kill=1
 		if self.locked then
 			if self.user:get_inventory():contains_item("main", "hook:climb_rope_locked")==false then
-				self.object:set_hp(0)
-				self.object:punch(self.object, {full_punch_interval=1.0,damage_groups={fleshy=4}}, "default:bronze_pick", nil)
+				self.object:remove()
 				return self
 			end
 			if is_hook({x=pos.x,y=pos.y+1,z=pos.z},self.uname) then
@@ -56,8 +56,7 @@ on_step= function(self, dtime)
 			end
 		else
 			if self.user:get_inventory():contains_item("main", "hook:climb_rope")==false then
-				self.object:set_hp(0)
-				self.object:punch(self.object, {full_punch_interval=1.0,damage_groups={fleshy=4}}, "default:bronze_pick", nil)
+				self.object:remove()
 				return self
 			end
 			if is_hook({x=pos.x,y=pos.y+1,z=pos.z},self.uname) then
@@ -73,8 +72,7 @@ on_step= function(self, dtime)
 		end
 	end
 	if self.timer2>3 or kill==1 then
-		self.object:set_hp(0)
-		self.object:punch(self.object, {full_punch_interval=1.0,damage_groups={fleshy=4}}, "default:bronze_pick", nil)
+		self.object:remove()
 
 	end
 	return self

@@ -36,7 +36,7 @@ minetest.register_tool("hook:pchest", {
 	description = "Portable locked chest",
 	inventory_image = "hook_extras_chest3.png",
 		on_place = function(itemstack, user, pointed_thing)
-			if minetest.is_protected(pointed_thing.above,user:get_player_name()) or minetest.registered_nodes[minetest.get_node(pointed_thing.above).name].walkable then
+			if minetest.is_protected(pointed_thing.above,user:get_player_name()) or slingshot_def(pointed_thing.above,"walkable") then
 				return itemstack
 			end
 			local p=minetest.dir_to_facedir(user:get_look_dir())
