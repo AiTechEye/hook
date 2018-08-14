@@ -30,8 +30,8 @@ local function slingshot_onuse(itemstack, user)
 	local item=user:get_inventory():get_stack("main", user:get_wield_index()+mode):get_name()
 	if item=="" then return itemstack end
 	local e=minetest.add_item({x=pos.x,y=pos.y+2,z=pos.z},item)
-	e:setvelocity({x=dir.x*veloc, y=dir.y*veloc, z=dir.z*veloc})
-	e:setacceleration({x=dir.x*-3, y=-5, z=dir.z*-3})
+	e:set_velocity({x=dir.x*veloc, y=dir.y*veloc, z=dir.z*veloc})
+	e:set_acceleration({x=dir.x*-3, y=-5, z=dir.z*-3})
 	e:get_luaentity().age=hook_tmp_time
 	table.insert(hook_tmp_throw,{ob=e,timer=2,user=user:get_player_name()})
 
@@ -93,10 +93,10 @@ minetest.register_globalstep(function(dtime)
 				if (not ob:is_player()) or (ob:is_player() and ob:get_player_name(ob)~=t.user and minetest.setting_getbool("enable_pvp")==true) then
 					ob:set_hp(ob:get_hp()-5)
 					ob:punch(ob, {full_punch_interval=1.0,damage_groups={fleshy=4}}, "default:bronze_pick", nil)
-					t.ob:setvelocity({x=0, y=0, z=0})
+					t.ob:set_velocity({x=0, y=0, z=0})
 					if ob:get_hp()<=0 and ob:is_player()==false then ob:remove() end
-					t.ob:setacceleration({x=0, y=-10,z=0})
-					t.ob:setvelocity({x=0, y=-10, z=0})
+					t.ob:set_acceleration({x=0, y=-10,z=0})
+					t.ob:set_velocity({x=0, y=-10, z=0})
 					table.remove(hook_tmp_throw,i)
 					minetest.sound_play("hook_hard_punch", {pos=ob:get_pos(), gain = 1.0, max_hear_distance = 5,})
 					break
@@ -195,8 +195,8 @@ minetest.register_tool("hook:climb_rope", {
 			local pos=user:get_pos()
 			local d=user:get_look_dir()
 			local m=minetest.add_entity({x=pos.x,y=pos.y+1.5,z=pos.z}, "hook:power")
-			m:setvelocity({x=d.x*15, y=d.y*15, z=d.z*15})
-			m:setacceleration({x=0, y=-5, z=0})
+			m:set_velocity({x=d.x*15, y=d.y*15, z=d.z*15})
+			m:set_acceleration({x=0, y=-5, z=0})
 			return itemstack
 		else
 			local pos=pointed_thing.under
@@ -235,8 +235,8 @@ minetest.register_tool("hook:climb_rope_locked", {
 			local pos=user:get_pos()
 			local d=user:get_look_dir()
 			local m=minetest.add_entity({x=pos.x,y=pos.y+1.5,z=pos.z}, "hook:power")
-			m:setvelocity({x=d.x*15, y=d.y*15, z=d.z*15})
-			m:setacceleration({x=0, y=-5, z=0})
+			m:set_velocity({x=d.x*15, y=d.y*15, z=d.z*15})
+			m:set_acceleration({x=0, y=-5, z=0})
 			return itemstack
 		else
 			local pos=pointed_thing.under
