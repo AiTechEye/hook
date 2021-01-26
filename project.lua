@@ -8,7 +8,6 @@ minetest.register_entity("hook:power",{
 	textures = {"hook_iron.png"},
 	is_visible = true,
 	makes_footstep_sound = false,
-	automatic_rotate = false,
 	timer2=0,
 	d=0,
 	uname="",
