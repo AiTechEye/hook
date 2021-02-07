@@ -4,7 +4,7 @@ minetest.register_craft({
 	output = "hook:pchest",
 	recipe = {
 		{"default:stick","default:stick","default:stick"},
-		{"default:stick","default:chest", "group:tree"},
+		{"default:stick","default:chest", "default:diamondblock"},
 		{"default:stick","default:stick","default:stick"},
 	}
 })
@@ -76,7 +76,7 @@ minetest.register_tool("hook:pchest", {
 minetest.register_node("hook:pchest_node", {
 	description = "Portable locked chest",
 	tiles = {"hook_extras_chest2.png","hook_extras_chest2.png","hook_extras_chest1.png","hook_extras_chest1.png","hook_extras_chest1.png","hook_extras_chest3.png"},
-	groups = {dig_immediate = 2, not_in_creative_inventory=1,exatec_tube_connected=1},
+	groups = {dig_immediate = 2, not_in_creative_inventory=1,tubedevice = 1, tubedevice_receiver = 1},
 	drop="hook:pchest",
 	paramtype2 = "facedir",
 	tube = {insert_object = function(pos, node, stack, direction)
