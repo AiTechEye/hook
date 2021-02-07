@@ -4,29 +4,31 @@ minetest.register_craft({
 	output = "hook:pchest",
 	recipe = {
 		{"default:stick","default:stick","default:stick"},
-		{"default:stick","default:chest", "default:diamondblock"},
+		{"default:stick","default:chest", "group:tree"},
 		{"default:stick","default:stick","default:stick"},
 	}
 })
 
-pchest.setpchest=function(pos,user)
+pchest.setpchest=function(pos,user,label)
 	local meta = minetest.get_meta(pos)
+	label = label or "PChest"
 	meta:set_string("owner", user:get_player_name())
 	meta:set_int("state", 0)
 	meta:get_inventory():set_size("main", 32)
 	meta:get_inventory():set_size("trans", 1)
 	meta:set_string("formspec",
-	"size[8,8]" ..
-	"list[context;main;0,0;8,4;]" ..
+	"size[8,9]" ..
+	"list[context;main;0,1;8,4;]" ..
 	"list[context;trans;0,0;0,0;]" ..
-	"list[current_player;main;0,4.3;8,4;]" ..
+	"list[current_player;main;0,5.3;8,4;]" ..
 	"listring[current_player;main]" ..
-	"listring[current_name;main]")
-	meta:set_string("infotext", "PChest by: " .. user:get_player_name())
+	"listring[current_name;main]" ..
+	"field[0.3,0.3;2,1;label;;"..label.."]")
+	meta:set_string("infotext", label.." (" .. user:get_player_name()..")")
 end
 
 minetest.register_tool("hook:pchest", {
-	description = "Portable locked chest (place on e.g a chest to move it over)",
+	description = "Portable locked chest",
 	inventory_image = "hook_extras_chest3.png",
 	on_use = function(itemstack, user, pointed_thing)
 		if pointed_thing.type == "node" then
@@ -67,17 +69,6 @@ minetest.register_tool("hook:pchest", {
 		local ab = pointed_thing.above
 		local s = ItemStack("default:unknown")
 		local sinv = minetest.get_meta(pointed_thing.under):get_inventory()
-		if minetest.get_item_group(minetest.get_node(p).name,"exatec_tube_connected") > 0 and sinv then
-			local out = exatec.def(p).output_list
-			if out then
-				for i,v in pairs(sinv:get_list(out)) do
-					if v:get_name() ~="hook:pchest" and exatec.test_output(p,v,p) and exatec.test_input(ab,v,ab) then
-						exatec.input(ab,v,ab,ab)
-						exatec.output(p,v,p)
-					end
-				end
-			end
-		end
 		return itemstack
 	end
 })
@@ -85,7 +76,7 @@ minetest.register_tool("hook:pchest", {
 minetest.register_node("hook:pchest_node", {
 	description = "Portable locked chest",
 	tiles = {"hook_extras_chest2.png","hook_extras_chest2.png","hook_extras_chest1.png","hook_extras_chest1.png","hook_extras_chest1.png","hook_extras_chest3.png"},
-	groups = {dig_immediate = 2, not_in_creative_inventory=1,tubedevice = 1, tubedevice_receiver = 1},
+	groups = {dig_immediate = 2, not_in_creative_inventory=1,exatec_tube_connected=1},
 	drop="hook:pchest",
 	paramtype2 = "facedir",
 	tube = {insert_object = function(pos, node, stack, direction)
@@ -149,9 +140,20 @@ minetest.register_node("hook:pchest_node", {
 			table.insert(items,v:to_table())
 		end
 		local item = ItemStack("hook:pchest"):to_table()
-		item.meta={items=minetest.serialize(items)}
+		local label = meta:get_string("label")
+		item.meta={items=minetest.serialize(items),label=label,description=label.." ("..name..")"}
 		pinv:add_item("main", ItemStack(item))
 		minetest.set_node(pos, {name = "air"})
 		minetest.sound_play("default_dig_dig_immediate", {pos=pos, gain = 1.0, max_hear_distance = 5,})
+	end,
+	on_receive_fields=function(pos, formname, pressed, sender)
+		if pressed.label then
+			local m = minetest.get_meta(pos)
+			local owner = m:get_string("owner")
+			if owner == sender:get_player_name() or owner == "" then
+				m:set_string("label",pressed.label)
+				pchest.setpchest(pos,sender,pressed.label)
+			end
+		end
 	end
 })

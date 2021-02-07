@@ -432,7 +432,7 @@ minetest.register_node("hook:hooking", {
 	description = "Hooking",
 	drawtype = "mesh",
 	mesh="hook_hook.obj",
-	tiles = {"hook_iron.png"}
+	tiles = {"hook_iron.png"},
 	paramtype = "light",
 	paramtype2 = "facedir",
 	walkable=false,
