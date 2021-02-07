@@ -26,43 +26,58 @@ pchest.setpchest=function(pos,user)
 end
 
 minetest.register_tool("hook:pchest", {
-	description = "Portable locked chest",
+	description = "Portable locked chest (place on e.g a chest to move it over)",
 	inventory_image = "hook_extras_chest3.png",
+	on_use = function(itemstack, user, pointed_thing)
+		if pointed_thing.type == "node" then
+			minetest.registered_tools["hook:pchest"].on_place(itemstack, user, pointed_thing)
+		end
+		return itemstack
+	end,
 	on_place = function(itemstack, user, pointed_thing)
 		if minetest.is_protected(pointed_thing.above,user:get_player_name()) or hook.slingshot_def(pointed_thing.above,"walkable") then
 			return itemstack
 		end
 		local p=minetest.dir_to_facedir(user:get_look_dir())
 		local item=itemstack:to_table()
+		local m = minetest.get_meta(pointed_thing.above)
 		minetest.set_node(pointed_thing.above, {name = "hook:pchest_node",param1="",param2=p})
-		pchest.setpchest(pointed_thing.above,user)
-			
 		minetest.sound_play("default_place_node_hard", {pos=pointed_thing.above, gain = 1.0, max_hear_distance = 5})
 
-		if not (item.meta or item.metadata) then
+		if not item.meta then
 			itemstack:take_item()
 			return itemstack
 		end
+
+		pchest.setpchest(pointed_thing.above,user,item.meta.label)
+
+		m:set_string("label",item.meta.label or "")
+
 		if item.meta.items then
 			local its = minetest.deserialize(item.meta.items or "") or {}
 			local items = {}
 			for i,it in pairs(its) do
 				table.insert(items,ItemStack(it))
 			end
+			m:get_inventory():set_list("main",items)
+		end
+		itemstack:take_item()
 
-			minetest.get_meta(pointed_thing.above):get_inventory():set_list("main",items)
-		elseif item.metadata ~= "" then
-			local meta=minetest.deserialize(item["metadata"])
-			local s=meta.stuff
-			local its=meta.stuff.split(meta.stuff,",",",")
-			local nmeta=minetest.get_meta(pointed_thing.above)
-			for i,it in pairs(its) do
-				if its~="" then
-					nmeta:get_inventory():set_stack("main",i, ItemStack(it))
+		local p = pointed_thing.under
+		local ab = pointed_thing.above
+		local s = ItemStack("default:unknown")
+		local sinv = minetest.get_meta(pointed_thing.under):get_inventory()
+		if minetest.get_item_group(minetest.get_node(p).name,"exatec_tube_connected") > 0 and sinv then
+			local out = exatec.def(p).output_list
+			if out then
+				for i,v in pairs(sinv:get_list(out)) do
+					if v:get_name() ~="hook:pchest" and exatec.test_output(p,v,p) and exatec.test_input(ab,v,ab) then
+						exatec.input(ab,v,ab,ab)
+						exatec.output(p,v,p)
+					end
 				end
 			end
 		end
-		itemstack:take_item()
 		return itemstack
 	end
 })
